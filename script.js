@@ -1,34 +1,42 @@
-
-
-// target the anchor links and div container
+// Selecciona todos los enlaces con imagen y el contenedor del modal
 const links = document.querySelectorAll('a');
-const overlay = document.querySelector('div');
+const overlay = document.querySelector('.modal');
 
-// following a click event on the links show the overlay
-function showOverlay() {
-  // use the src & alt attribute of the selected image in the overlay
+// Muestra el overlay al hacer clic en una imagen de la galería
+function showOverlay(e) {
+  e.preventDefault(); // Evita el salto de la página por el href="#"
+  
+  // Obtiene los atributos src y alt de la imagen seleccionada
   const src = this.querySelector('img').getAttribute('src');
   const alt = this.querySelector('img').getAttribute('alt');
+  
+  // Actualiza los datos de la imagen dentro del modal
   overlay.querySelector('img').setAttribute('src', src);
   overlay.querySelector('img').setAttribute('alt', alt);
 
+  // Muestra el modal agregando la clase
   overlay.classList.add('overlay');
 
-  // to remove the anchor links from reach set the tabindex attribute to a negative value
+  // Deshabilita la navegación por teclado en la galería mientras el modal está activo
   links.forEach(link => link.setAttribute('tabindex', -1));
 }
 
 links.forEach(link => link.addEventListener('click', showOverlay));
 
-// following a click event on the overlay, consider if the click was registered on the button
-// if so hide the overlay back
+// Oculta el overlay al hacer clic en la imagen, en el botón de cerrar o en el fondo
 function hideOverlay(e) {
-  if (e.target.tagName === 'BUTTON') {
+  // Se cierra si el clic es en la imagen, el botón (o SVG) o el fondo del overlay
+  if (
+    e.target.tagName === 'IMG' || 
+    e.target.tagName === 'BUTTON' || 
+    e.target.closest('button') ||
+    e.target === overlay
+  ) {
     overlay.classList.remove('overlay');
-    // restore the default value of the anchor links
+    
+    // Restaura la navegación por teclado en la galería
     links.forEach(link => link.setAttribute('tabindex', 0));
   }
 }
 
 overlay.addEventListener('click', hideOverlay);
-
