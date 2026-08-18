@@ -1,15 +1,20 @@
 const contenedorGaleria = document.getElementById('galeria');
 const overlay = document.querySelector('.modal');
 
-// Lee el archivo fotos.json que generó Python
+// Opciones de tamaño aleatorio
+const clasesTamano = ['', 'span-col-2', 'span-row-2', 'span-big'];
+
 fetch('fotos.json')
   .then(res => res.json())
   .then(misFotos => {
-    // Inserta cada imagen dentro de <main>
     misFotos.forEach(nombreFoto => {
       const anchor = document.createElement('a');
       anchor.href = '#';
       
+      // Asigna una clase de tamaño al azar
+      const claseAzar = clasesTamano[Math.floor(Math.random() * clasesTamano.length)];
+      if (claseAzar) anchor.classList.add(claseAzar);
+
       const img = document.createElement('img');
       img.src = `media/${nombreFoto}`;
       img.alt = nombreFoto;
@@ -25,7 +30,6 @@ fetch('fotos.json')
 function inicializarEventos() {
   const links = contenedorGaleria.querySelectorAll('a');
 
-  // Abrir modal
   links.forEach(link => {
     link.addEventListener('click', function(e) {
       e.preventDefault();
@@ -40,14 +44,9 @@ function inicializarEventos() {
     });
   });
 
-  // Cerrar modal al tocar la imagen, boton X o fondo
+  // Cierra al tocar la imagen o el fondo oscuro
   overlay.addEventListener('click', function(e) {
-    if (
-      e.target.tagName === 'IMG' || 
-      e.target.tagName === 'BUTTON' || 
-      e.target.closest('button') ||
-      e.target === overlay
-    ) {
+    if (e.target.tagName === 'IMG' || e.target === overlay) {
       overlay.classList.remove('overlay');
       links.forEach(l => l.setAttribute('tabindex', 0));
     }
