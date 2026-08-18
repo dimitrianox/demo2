@@ -6,37 +6,53 @@ from tkinter import filedialog
 ARCHIVO_JSON = 'fotos.json'
 
 def seleccionar_txt_y_convertir():
-    # Ocultar la ventana principal de tkinter
     root = tk.Tk()
     root.withdraw()
-    root.attributes('-topmost', True) # Forzar a que la ventana aparezca al frente
+    root.attributes('-topmost', True)
 
-    print("Abriendo el explorador de archivos...")
+    print("Abriendo explorador de archivos...")
     
-    # Abrir el cuadro de diálogo para seleccionar el archivo .txt
     ruta_txt = filedialog.askopenfilename(
-        title="Selecciona el archivo TXT con las URLs",
+        title="Selecciona el archivo TXT",
         filetypes=[("Archivos de texto", "*.txt"), ("Todos los archivos", "*.*")]
     )
 
-    # Si el usuario cierra el explorador sin seleccionar nada
     if not ruta_txt:
         print("\n⚠️ No seleccionaste ningún archivo.")
         return
 
-    # Leer las URLs del archivo TXT seleccionado
-    with open(ruta_txt, 'r', encoding='utf-8') as f:
-        urls = [linea.strip() for linea in f if linea.strip()]
+    lista_media = []
 
-    if not urls:
+    with open(ruta_txt, 'r', encoding='utf-8') as f:
+        for linea in f:
+            linea = linea.strip()
+            if not linea:
+                continue
+            
+            partes = [p.strip() for p in linea.split('|')]
+            
+            url = partes[0]
+            titulo = partes[1] if len(partes) > 1 else ""
+            ubicacion = partes[2] if len(partes) > 2 else ""
+            fecha = partes[3] if len(partes) > 3 else ""
+            descripcion = partes[4] if len(partes) > 4 else ""
+
+            lista_media.append({
+                "url": url,
+                "titulo": titulo,
+                "ubicacion": ubicacion,
+                "fecha": fecha,
+                "descripcion": descripcion
+            })
+
+    if not lista_media:
         print(f"\n⚠️ El archivo '{os.path.basename(ruta_txt)}' está vacío.")
         return
 
-    # Guardar la lista de URLs en fotos.json
     with open(ARCHIVO_JSON, 'w', encoding='utf-8') as f:
-        json.dump(urls, f, ensure_ascii=False, indent=2)
+        json.dump(lista_media, f, ensure_ascii=False, indent=2)
 
-    print(f"\n✅ ¡Éxito! Se procesaron {len(urls)} URLs desde '{os.path.basename(ruta_txt)}' y se guardaron en '{ARCHIVO_JSON}'.")
+    print(f"\n✅ ¡Éxito! Se procesaron {len(lista_media)} elementos y se guardaron en '{ARCHIVO_JSON}'.")
 
 if __name__ == '__main__':
     seleccionar_txt_y_convertir()

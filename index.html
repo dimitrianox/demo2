@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Galería de Fotos</title>
+  <title>Galería de Fotos y Videos</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -11,7 +11,22 @@
   <main id="galeria"></main>
 
   <div class="modal">
-    <img src="" alt="" />
+    <div class="modal-content">
+      <!-- Para fotos -->
+      <img src="" alt="" id="modal-img" style="display: none;" />
+      
+      <!-- Para videos -->
+      <video id="modal-video" controls autoplay loop style="display: none;"></video>
+
+      <div class="info-card">
+        <h3 id="info-titulo"></h3>
+        <p id="info-meta">
+          <span id="info-ubicacion"></span>
+          <span id="info-fecha"></span>
+        </p>
+        <p id="info-descripcion"></p>
+      </div>
+    </div>
   </div>
 
   <script src="script.js"></script>
