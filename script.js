@@ -7,6 +7,8 @@ const modalVideo = document.getElementById('modal-video');
 const clasesTamano = ['', 'span-col-2', 'span-row-2', 'span-big'];
 const extensionesVideo = ['.mp4', '.webm', '.ogg', '.mov'];
 
+let ultimoToque = 0; // Guardar el tiempo del último toque para detectar doble tap
+
 function esVideo(url) {
   return extensionesVideo.some(ext => url.toLowerCase().includes(ext));
 }
@@ -16,6 +18,7 @@ fetch('fotos.json')
   .then(misFotos => {
     misFotos.forEach(item => {
       const url = typeof item === 'string' ? item : item.url;
+      const poster = item.poster || '';
       const titulo = item.titulo || '';
       const ubicacion = item.ubicacion || '';
       const fecha = item.fecha || '';
@@ -35,14 +38,21 @@ fetch('fotos.json')
       anchor.dataset.esVideo = esVideo(url);
 
       if (esVideo(url)) {
-        // Miniatura de video pausada (sin autoplay)
-        const video = document.createElement('video');
-        video.src = url;
-        video.muted = true;
-        video.preload = "metadata";
-        video.playsInline = true;
-        video.setAttribute('referrerpolicy', 'no-referrer');
-        anchor.appendChild(video);
+        if (poster) {
+          const img = document.createElement('img');
+          img.src = poster;
+          img.alt = titulo || 'Video';
+          img.setAttribute('referrerpolicy', 'no-referrer');
+          anchor.appendChild(img);
+        } else {
+          const video = document.createElement('video');
+          video.src = url;
+          video.muted = true;
+          video.preload = "metadata";
+          video.playsInline = true;
+          video.setAttribute('referrerpolicy', 'no-referrer');
+          anchor.appendChild(video);
+        }
       } else {
         const img = document.createElement('img');
         img.src = url;
@@ -103,16 +113,24 @@ function inicializarEventos() {
     });
   });
 
-  // Cierre limpio al hacer clic en el fondo o en los elementos
+  // Evento para cerrar imágenes con 1 clic y vídeos estrictamente con DOBLE TAP
   overlay.addEventListener('click', function(e) {
-    // Si hace clic en la barra de controles de abajo del video, no se cierra para permitir pausar/adelantar
-    const rect = modalVideo.getBoundingClientRect();
-    const esBarraControles = (e.target === modalVideo) && (e.clientY > rect.bottom - 45);
+    const esModalVideo = modalVideo.style.display === 'block';
 
-    if (esBarraControles) return;
+    if (esModalVideo) {
+      const tiempoActual = new Date().getTime();
+      const diferenciaTiempo = tiempoActual - ultimoToque;
 
-    // Cualquier otro toque (fondo, imagen, centro del video) cierra el modal
-    cerrarModal(links);
+      // Si la diferencia entre toques es menor a 300ms, se detecta como doble tap
+      if (diferenciaTiempo < 300 && diferenciaTiempo > 0) {
+        cerrarModal(links);
+      }
+      
+      ultimoToque = tiempoActual;
+    } else {
+      // Para las fotos, se cierra con un solo toque
+      cerrarModal(links);
+    }
   });
 }
 
