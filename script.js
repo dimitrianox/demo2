@@ -3,13 +3,13 @@ const overlay = document.querySelector('.modal');
 const infoCard = document.querySelector('.info-card');
 const modalImg = document.getElementById('modal-img');
 const modalVideo = document.getElementById('modal-video');
-const atlasCanvas = document.getElementById('atlas-canvas');
 
 const clasesTamano = ['', 'span-col-2', 'span-row-2', 'span-big'];
 const extensionesVideo = ['.mp4', '.webm', '.ogg', '.mov'];
 
 let ultimoToque = 0;
 
+// Prevenir el menú contextual al dejar presionado sobre cualquier imagen o video
 document.addEventListener('contextmenu', function(e) {
   if (e.target.tagName === 'IMG' || e.target.tagName === 'VIDEO') {
     e.preventDefault();
@@ -30,7 +30,6 @@ fetch('fotos.json')
       const ubicacion = item.ubicacion || '';
       const fecha = item.fecha || '';
       const descripcion = item.descripcion || '';
-      const mapa = item.mapa || 'europe';
 
       const anchor = document.createElement('a');
       anchor.href = '#';
@@ -43,7 +42,6 @@ fetch('fotos.json')
       anchor.dataset.ubicacion = ubicacion;
       anchor.dataset.fecha = fecha;
       anchor.dataset.descripcion = descripcion;
-      anchor.dataset.mapa = mapa;
       anchor.dataset.esVideo = esVideo(url);
 
       if (esVideo(url)) {
@@ -81,6 +79,7 @@ function manejarDobleTap() {
   const tiempoActual = new Date().getTime();
   const diferenciaTiempo = tiempoActual - ultimoToque;
 
+  // Si el segundo toque ocurre en menos de 350ms, se cierra el modal
   if (diferenciaTiempo < 350 && diferenciaTiempo > 0) {
     const links = contenedorGaleria.querySelectorAll('a');
     cerrarModal(links);
@@ -98,62 +97,47 @@ function inicializarEventos() {
       
       const url = this.dataset.url;
       const esVid = this.dataset.esVideo === 'true';
-      const datosModal = this.dataset;
 
-      // Resetear clases de animación previa
-      modalImg.classList.remove('foto-emergida');
-      modalVideo.classList.remove('foto-emergida');
-      overlay.classList.add('overlay');
-
-      const revelarFotoFinal = () => {
-        if (esVid) {
-          modalImg.style.display = 'none';
-          modalImg.src = '';
-          modalVideo.src = url;
-          modalVideo.style.display = 'block';
-          modalVideo.play().catch(() => {});
-          setTimeout(() => modalVideo.classList.add('foto-emergida'), 20);
-        } else {
-          modalVideo.style.display = 'none';
-          modalVideo.pause();
-          modalVideo.src = '';
-          modalImg.src = url;
-          modalImg.style.display = 'block';
-          setTimeout(() => modalImg.classList.add('foto-emergida'), 20);
-        }
-
-        if (document.getElementById('info-titulo')) {
-          document.getElementById('info-titulo').textContent = datosModal.titulo;
-          document.getElementById('info-ubicacion').textContent = datosModal.ubicacion ? `📍 ${datosModal.ubicacion}` : '';
-          document.getElementById('info-fecha').textContent = datosModal.fecha ? `📅 ${datosModal.fecha}` : '';
-          document.getElementById('info-descripcion').textContent = datosModal.descripcion;
-
-          infoCard.classList.remove('mostrar');
-          void infoCard.offsetWidth; 
-          
-          if (datosModal.titulo || datosModal.ubicacion || datosModal.fecha || datosModal.descripcion) {
-            infoCard.classList.add('mostrar');
-          }
-        }
-      };
-
-      // Disparar secuencia de animación completa
-      if (typeof AtlasEngine !== 'undefined' && datosModal.ubicacion) {
-        AtlasEngine.ejecutarSecuenciaAtlas(atlasCanvas, {
-          ubicacion: datosModal.ubicacion,
-          mapa: datosModal.mapa
-        }, revelarFotoFinal);
+      if (esVid) {
+        modalImg.style.display = 'none';
+        modalImg.src = '';
+        
+        modalVideo.src = url;
+        modalVideo.style.display = 'block';
+        modalVideo.play();
       } else {
-        revelarFotoFinal();
+        modalVideo.style.display = 'none';
+        modalVideo.pause();
+        modalVideo.src = '';
+        
+        modalImg.src = url;
+        modalImg.style.display = 'block';
+      }
+      
+      if (document.getElementById('info-titulo')) {
+        document.getElementById('info-titulo').textContent = this.dataset.titulo;
+        document.getElementById('info-ubicacion').textContent = this.dataset.ubicacion ? `📍 ${this.dataset.ubicacion}` : '';
+        document.getElementById('info-fecha').textContent = this.dataset.fecha ? `📅 ${this.dataset.fecha}` : '';
+        document.getElementById('info-descripcion').textContent = this.dataset.descripcion;
+
+        infoCard.classList.remove('mostrar');
+        void infoCard.offsetWidth; 
+        
+        if (this.dataset.titulo || this.dataset.ubicacion || this.dataset.fecha || this.dataset.descripcion) {
+          infoCard.classList.add('mostrar');
+        }
       }
 
+      overlay.classList.add('overlay');
       links.forEach(l => l.setAttribute('tabindex', -1));
     });
   });
 
+  // Escuchar toques directamente en el video tanto en móviles como en escritorio
   modalVideo.addEventListener('touchstart', manejarDobleTap, { passive: true });
   modalVideo.addEventListener('click', manejarDobleTap);
 
+  // Escuchar toques en el fondo fuera del video
   overlay.addEventListener('click', function(e) {
     const esModalVideo = modalVideo.style.display === 'block';
 
@@ -163,7 +147,7 @@ function inicializarEventos() {
       } else {
         cerrarModal(links);
       }
-    } else if (!esModalVideo && e.target !== modalImg) {
+    } else if (!esModalVideo) {
       cerrarModal(links);
     }
   });
@@ -171,8 +155,6 @@ function inicializarEventos() {
 
 function cerrarModal(links) {
   overlay.classList.remove('overlay');
-  modalImg.classList.remove('foto-emergida');
-  modalVideo.classList.remove('foto-emergida');
   modalVideo.pause();
   modalVideo.src = '';
   if (infoCard) infoCard.classList.remove('mostrar');
