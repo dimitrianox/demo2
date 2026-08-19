@@ -35,17 +35,19 @@ fetch('fotos.json')
       anchor.dataset.esVideo = esVideo(url);
 
       if (esVideo(url)) {
+        // Miniatura de video pausada (sin autoplay)
         const video = document.createElement('video');
         video.src = url;
-        video.autoplay = true;
-        video.loop = true;
         video.muted = true;
+        video.preload = "metadata";
         video.playsInline = true;
+        video.setAttribute('referrerpolicy', 'no-referrer');
         anchor.appendChild(video);
       } else {
         const img = document.createElement('img');
         img.src = url;
         img.alt = titulo || 'Fotografía';
+        img.setAttribute('referrerpolicy', 'no-referrer');
         anchor.appendChild(img);
       }
 
@@ -101,17 +103,23 @@ function inicializarEventos() {
     });
   });
 
+  // Cierre limpio al hacer clic en el fondo o en los elementos
   overlay.addEventListener('click', function(e) {
-    if (e.target.tagName === 'IMG' || e.target === overlay || e.target.closest('.modal-content')) {
-      if (e.target.tagName === 'VIDEO' && e.target.hasAttribute('controls')) {
-        return;
-      }
+    // Si hace clic en la barra de controles de abajo del video, no se cierra para permitir pausar/adelantar
+    const rect = modalVideo.getBoundingClientRect();
+    const esBarraControles = (e.target === modalVideo) && (e.clientY > rect.bottom - 45);
 
-      overlay.classList.remove('overlay');
-      modalVideo.pause();
-      modalVideo.src = '';
-      if (infoCard) infoCard.classList.remove('mostrar');
-      links.forEach(l => l.setAttribute('tabindex', 0));
-    }
+    if (esBarraControles) return;
+
+    // Cualquier otro toque (fondo, imagen, centro del video) cierra el modal
+    cerrarModal(links);
   });
+}
+
+function cerrarModal(links) {
+  overlay.classList.remove('overlay');
+  modalVideo.pause();
+  modalVideo.src = '';
+  if (infoCard) infoCard.classList.remove('mostrar');
+  links.forEach(l => l.setAttribute('tabindex', 0));
 }
