@@ -11,139 +11,43 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  color: #f1f5f9;
-  background-color: #080a0c; /* Fondo oscuro idéntico a la imagen de muestra */
-  padding: 1.5rem 0 3rem 0;
+  color: hsl(0, 0%, 100%);
+  background: hsl(210, 5%, 7%);
+  padding: 2rem 0;
   font-family: 'Roboto', sans-serif;
-  position: relative;
-  overflow-x: hidden;
 }
 
-/* CAPA DE MAPA VECTORIAL */
-.map-bg-layer {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* Luces de ambiente en puntos clave */
-.map-glow {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(80px);
-  pointer-events: none;
-}
-
-.glow-1 {
-  width: 300px;
-  height: 300px;
-  background: rgba(212, 175, 55, 0.07);
-  top: 10%;
-  right: 15%;
-}
-
-.glow-2 {
-  width: 250px;
-  height: 250px;
-  background: rgba(212, 175, 55, 0.05);
-  bottom: 20%;
-  left: 10%;
-}
-
-.map-svg {
-  width: 100%;
-  height: 100%;
-}
-
-/* Líneas de costa y mapas vectoriales doradas finas */
-.map-contours path {
-  fill: none;
-  stroke: rgba(180, 140, 60, 0.22);
-  stroke-width: 1;
-}
-
-.route-path {
-  fill: none;
-  stroke: rgba(230, 190, 90, 0.6);
-  stroke-width: 1.2;
-  stroke-dasharray: 4 6;
-  animation: dashMove 25s linear infinite;
-}
-
-.node-dot {
-  fill: #ffe58f;
-  filter: drop-shadow(0 0 6px #d4af37);
-}
-
-.node-pulse {
-  fill: none;
-  stroke: rgba(212, 175, 55, 0.6);
-  stroke-width: 1;
-  animation: pulse 2.8s infinite ease-out;
-}
-
-@keyframes pulse {
-  0% { transform: scale(0.2); opacity: 1; }
-  100% { transform: scale(2.5); opacity: 0; }
-}
-
-@keyframes dashMove {
-  to { stroke-dashoffset: -100; }
-}
-
-/* ENCABEZADO ESTILO ATLAS */
-.atlas-header {
-  z-index: 1;
-  margin-bottom: 1.5rem;
-  text-align: center;
-}
-
-.atlas-header h1 {
-  font-family: 'Cinzel', serif;
-  font-size: 1.3rem;
-  letter-spacing: 5px;
-  color: rgba(212, 175, 55, 0.85);
-  text-transform: uppercase;
-}
-
-/* GRID PRINCIPAL DE FOTOS */
 main {
   max-width: 800px;
   width: 90vw;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   grid-auto-rows: 150px;
-  gap: 12px;
+  gap: 10px;
   justify-content: center;
   grid-auto-flow: dense;
-  z-index: 1;
 }
 
 main a {
   overflow: hidden;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.7);
-  background-color: #111418;
+  border-radius: 4px;
 }
 
+/* TAMAÑOS ALEATORIOS */
 main a.span-col-2 { grid-column: span 2; }
 main a.span-row-2 { grid-row: span 2; }
 main a.span-big { grid-column: span 2; grid-row: span 2; }
 
 main a:focus { outline: none; }
 
+/* DESACTIVAR MENÚ CONTEXTUAL Y SELECCIÓN EN IMÁGENES Y VIDEOS */
 img, video {
-  -webkit-touch-callout: none;
+  -webkit-touch-callout: none; /* Desactiva menú contextual en iOS Safari */
   -webkit-user-select: none;
   -khtml-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
-  user-select: none;
+  user-select: none;          /* Evita selección de imágenes */
 }
 
 main img,
@@ -152,19 +56,19 @@ main video {
   display: block;
   width: 100%;
   height: 100%;
-  filter: brightness(0.85) contrast(1.05);
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), filter 0.4s ease;
+  filter: brightness(0.6);
+  transition: all 0.3s cubic-bezier(0.445, 0.05, 0.55, 0.95);
 }
 
 main a:focus img,
 main a:hover img,
 main a:focus video,
 main a:hover video {
-  transform: scale(1.05);
-  filter: brightness(1.05) contrast(1.05);
+  transform: scale(1.1);
+  filter: brightness(1);
 }
 
-/* MODAL OVERLAY CON FONDO OSCURO Y DESENFOQUE */
+/* MODAL OVERLAY */
 div.modal {
   position: fixed;
   top: 0;
@@ -174,9 +78,9 @@ div.modal {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: rgba(4, 5, 7, 0.92);
-  backdrop-filter: blur(10px);
-  transition: opacity 0.35s ease, visibility 0.35s ease;
+  background: hsla(0, 0%, 0%, 0.85);
+  backdrop-filter: blur(5px);
+  transition: all 0.3s ease-in-out;
   opacity: 0;
   visibility: hidden;
   z-index: 1000;
@@ -192,59 +96,49 @@ div.modal.overlay {
   display: flex;
   justify-content: center;
   align-items: center;
-  transform: scale(0.85);
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-div.modal.overlay .modal-content {
-  transform: scale(1);
 }
 
 div.modal img,
 div.modal video {
-  height: 82vh;
+  height: 85vh;
   width: 85vw;
   max-width: 900px;
   object-fit: contain;
-  border-radius: 8px;
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.9);
 }
 
 div.modal img {
   cursor: pointer;
 }
 
-/* TARJETA INFORMATIVA */
+/* TARJETA DE INFORMACIÓN FLOTANTE */
 .info-card {
   position: absolute;
-  bottom: 25px;
+  bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(10, 12, 16, 0.92);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(212, 175, 55, 0.25);
-  padding: 14px 22px;
-  border-radius: 10px;
+  background: rgba(15, 15, 20, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 12px 20px;
+  border-radius: 8px;
   color: #fff;
   text-align: center;
   pointer-events: none;
   opacity: 0;
-  width: 82%;
-  max-width: 420px;
+  width: 80%;
+  max-width: 450px;
   z-index: 1010;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.8);
 }
 
 .info-card h3 {
-  font-family: 'Cinzel', serif;
-  font-size: 1.05rem;
+  font-size: 1.1rem;
   margin-bottom: 4px;
-  color: #f5d77f;
+  font-weight: 700;
 }
 
 #info-meta {
-  font-size: 0.8rem;
-  color: #94a3b8;
+  font-size: 0.85rem;
+  color: #ccc;
   margin-bottom: 6px;
   display: flex;
   justify-content: center;
@@ -252,10 +146,11 @@ div.modal img {
 }
 
 #info-descripcion {
-  font-size: 0.88rem;
-  color: #cbd5e1;
+  font-size: 0.9rem;
+  color: #eee;
 }
 
+/* ANIMACIÓN: 3s visible + 1s desvanecimiento */
 .info-card.mostrar {
   animation: mostrarYDesvanecer 4s forwards;
 }

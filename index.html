@@ -4,59 +4,25 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <meta name="theme-color" content="#080a0c">
+  <!-- Camufla la barra de direcciones con el color del fondo -->
+  <meta name="theme-color" content="#111315">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   
+  <!-- Oculta la marca de agua evitando enviar el origen del sitio -->
   <meta name="referrer" content="no-referrer">
-  <title>Atlas - Galería</title>
-  
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
-  
+  <title>Galería de Fotos y Videos</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-
-  <!-- Capa Vectorial de Mapa Oscuro (Sin imágenes externas) -->
-  <div class="map-bg-layer">
-    <!-- Glows de luz dorada distante -->
-    <div class="map-glow glow-1"></div>
-    <div class="map-glow glow-2"></div>
-
-    <svg class="map-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid slice">
-      <!-- Trazos de mapa topográfico/costero en dorado fino -->
-      <g class="map-contours">
-        <path d="M -100 200 C 150 180, 200 350, 350 300 C 500 250, 600 400, 800 350 C 950 300, 1100 450, 1200 400" />
-        <path d="M -100 220 C 140 200, 210 330, 340 320 C 510 270, 590 380, 810 370 C 940 320, 1090 430, 1200 420" />
-        <path d="M 200 600 Q 400 500 650 700 T 1100 650" />
-        <path d="M 180 620 Q 390 520, 640 720 T 1090 670" />
-      </g>
-
-      <!-- Ruta discontinua animada entre destinos -->
-      <path d="M 350 300 Q 500 150 750 250" class="route-path" />
-
-      <!-- Puntos incandescentes en las coordenadas -->
-      <g class="map-node" transform="translate(350, 300)">
-        <circle r="2.5" class="node-dot" />
-        <circle r="12" class="node-pulse" />
-      </g>
-      <g class="map-node" transform="translate(750, 250)">
-        <circle r="2.5" class="node-dot" />
-        <circle r="12" class="node-pulse" />
-      </g>
-    </svg>
-  </div>
-
-  <header class="atlas-header">
-    <h1>🌐 ATLAS</h1>
-  </header>
 
   <main id="galeria"></main>
 
   <div class="modal">
     <div class="modal-content">
+      <!-- Para fotos -->
       <img src="" alt="" id="modal-img" style="display: none;" referrerpolicy="no-referrer" />
+      
+      <!-- Para videos -->
       <video id="modal-video" controls style="display: none;"></video>
 
       <div class="info-card">
