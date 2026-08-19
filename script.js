@@ -7,7 +7,7 @@ const modalVideo = document.getElementById('modal-video');
 const clasesTamano = ['', 'span-col-2', 'span-row-2', 'span-big'];
 const extensionesVideo = ['.mp4', '.webm', '.ogg', '.mov'];
 
-let ultimoToque = 0; // Guardar el tiempo del último toque para detectar doble tap
+let ultimoToque = 0;
 
 function esVideo(url) {
   return extensionesVideo.some(ext => url.toLowerCase().includes(ext));
@@ -68,6 +68,19 @@ fetch('fotos.json')
   })
   .catch(err => console.error("Error al cargar fotos.json:", err));
 
+function manejarDobleTap() {
+  const tiempoActual = new Date().getTime();
+  const diferenciaTiempo = tiempoActual - ultimoToque;
+
+  // Si el segundo toque ocurre en menos de 350ms, se cierra el modal
+  if (diferenciaTiempo < 350 && diferenciaTiempo > 0) {
+    const links = contenedorGaleria.querySelectorAll('a');
+    cerrarModal(links);
+  }
+  
+  ultimoToque = tiempoActual;
+}
+
 function inicializarEventos() {
   const links = contenedorGaleria.querySelectorAll('a');
 
@@ -113,22 +126,21 @@ function inicializarEventos() {
     });
   });
 
-  // Evento para cerrar imágenes con 1 clic y vídeos estrictamente con DOBLE TAP
+  // Escuchar toques directamente en el video tanto en móviles como en escritorio
+  modalVideo.addEventListener('touchstart', manejarDobleTap, { passive: true });
+  modalVideo.addEventListener('click', manejarDobleTap);
+
+  // Escuchar toques en el fondo fuera del video
   overlay.addEventListener('click', function(e) {
     const esModalVideo = modalVideo.style.display === 'block';
 
-    if (esModalVideo) {
-      const tiempoActual = new Date().getTime();
-      const diferenciaTiempo = tiempoActual - ultimoToque;
-
-      // Si la diferencia entre toques es menor a 300ms, se detecta como doble tap
-      if (diferenciaTiempo < 300 && diferenciaTiempo > 0) {
+    if (e.target === overlay) {
+      if (esModalVideo) {
+        manejarDobleTap();
+      } else {
         cerrarModal(links);
       }
-      
-      ultimoToque = tiempoActual;
-    } else {
-      // Para las fotos, se cierra con un solo toque
+    } else if (!esModalVideo) {
       cerrarModal(links);
     }
   });
