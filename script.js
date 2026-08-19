@@ -3,13 +3,13 @@ const overlay = document.querySelector('.modal');
 const infoCard = document.querySelector('.info-card');
 const modalImg = document.getElementById('modal-img');
 const modalVideo = document.getElementById('modal-video');
+const atlasCanvas = document.getElementById('atlas-canvas');
 
 const clasesTamano = ['', 'span-col-2', 'span-row-2', 'span-big'];
 const extensionesVideo = ['.mp4', '.webm', '.ogg', '.mov'];
 
 let ultimoToque = 0;
 
-// Prevenir el menú contextual al dejar presionado sobre cualquier imagen o video
 document.addEventListener('contextmenu', function(e) {
   if (e.target.tagName === 'IMG' || e.target.tagName === 'VIDEO') {
     e.preventDefault();
@@ -30,6 +30,7 @@ fetch('fotos.json')
       const ubicacion = item.ubicacion || '';
       const fecha = item.fecha || '';
       const descripcion = item.descripcion || '';
+      const mapa = item.mapa || 'europe';
 
       const anchor = document.createElement('a');
       anchor.href = '#';
@@ -42,6 +43,7 @@ fetch('fotos.json')
       anchor.dataset.ubicacion = ubicacion;
       anchor.dataset.fecha = fecha;
       anchor.dataset.descripcion = descripcion;
+      anchor.dataset.mapa = mapa;
       anchor.dataset.esVideo = esVideo(url);
 
       if (esVideo(url)) {
@@ -79,7 +81,6 @@ function manejarDobleTap() {
   const tiempoActual = new Date().getTime();
   const diferenciaTiempo = tiempoActual - ultimoToque;
 
-  // Si el segundo toque ocurre en menos de 350ms, se cierra el modal
   if (diferenciaTiempo < 350 && diferenciaTiempo > 0) {
     const links = contenedorGaleria.querySelectorAll('a');
     cerrarModal(links);
@@ -97,6 +98,12 @@ function inicializarEventos() {
       
       const url = this.dataset.url;
       const esVid = this.dataset.esVideo === 'true';
+
+      // Disparar motor Atlas en el fondo
+      AtlasEngine.renderizarRuta(atlasCanvas, {
+        ubicacion: this.dataset.ubicacion,
+        mapa: this.dataset.mapa
+      });
 
       if (esVid) {
         modalImg.style.display = 'none';
@@ -133,15 +140,13 @@ function inicializarEventos() {
     });
   });
 
-  // Escuchar toques directamente en el video tanto en móviles como en escritorio
   modalVideo.addEventListener('touchstart', manejarDobleTap, { passive: true });
   modalVideo.addEventListener('click', manejarDobleTap);
 
-  // Escuchar toques en el fondo fuera del video
   overlay.addEventListener('click', function(e) {
     const esModalVideo = modalVideo.style.display === 'block';
 
-    if (e.target === overlay) {
+    if (e.target === overlay || e.target === atlasCanvas) {
       if (esModalVideo) {
         manejarDobleTap();
       } else {
@@ -155,6 +160,7 @@ function inicializarEventos() {
 
 function cerrarModal(links) {
   overlay.classList.remove('overlay');
+  AtlasEngine.limpiar(atlasCanvas);
   modalVideo.pause();
   modalVideo.src = '';
   if (infoCard) infoCard.classList.remove('mostrar');
