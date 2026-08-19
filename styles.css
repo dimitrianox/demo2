@@ -40,6 +40,16 @@ main a.span-big { grid-column: span 2; grid-row: span 2; }
 
 main a:focus { outline: none; }
 
+/* DESACTIVAR MENÚ CONTEXTUAL Y SELECCIÓN EN IMÁGENES Y VIDEOS */
+img, video {
+  -webkit-touch-callout: none; /* Desactiva menú contextual en iOS Safari */
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;          /* Evita selección de imágenes */
+}
+
 main img,
 main video {
   object-fit: cover;

@@ -9,6 +9,13 @@ const extensionesVideo = ['.mp4', '.webm', '.ogg', '.mov'];
 
 let ultimoToque = 0;
 
+// Prevenir el menú contextual al dejar presionado sobre cualquier imagen o video
+document.addEventListener('contextmenu', function(e) {
+  if (e.target.tagName === 'IMG' || e.target.tagName === 'VIDEO') {
+    e.preventDefault();
+  }
+});
+
 function esVideo(url) {
   return extensionesVideo.some(ext => url.toLowerCase().includes(ext));
 }
