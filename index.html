@@ -4,25 +4,50 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <!-- Camufla la barra de direcciones con el color del fondo -->
-  <meta name="theme-color" content="#111315">
+  <!-- Camufla la barra de direcciones con el tono azul noche del tema -->
+  <meta name="theme-color" content="#0b0d10">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   
-  <!-- Oculta la marca de agua evitando enviar el origen del sitio -->
   <meta name="referrer" content="no-referrer">
-  <title>Galería de Fotos y Videos</title>
+  <title>Atlas - Galería de Viajes</title>
+  
+  <!-- Tipografía elegante para el concepto Atlas -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+
+  <!-- Capa del mapa estelar / topográfico de fondo -->
+  <div class="map-bg-layer">
+    <svg class="map-svg" viewBox="0 0 800 1000" preserveAspectRatio="xMidYMid slice">
+      <!-- Trazo tenue de ruta -->
+      <path d="M 150 200 Q 400 350 650 500 T 200 800" class="route-path" />
+      
+      <!-- Puntos de referencia geográficos animados -->
+      <g class="map-node" transform="translate(150, 200)">
+        <circle r="3" class="node-dot" />
+        <circle r="10" class="node-pulse" />
+      </g>
+      <g class="map-node" transform="translate(650, 500)">
+        <circle r="3" class="node-dot" />
+        <circle r="10" class="node-pulse" />
+      </g>
+    </svg>
+  </div>
+
+  <!-- Encabezado sutil estilo Atlas -->
+  <header class="atlas-header">
+    <h1><span>🌐</span> ATLAS</h1>
+  </header>
 
   <main id="galeria"></main>
 
   <div class="modal">
     <div class="modal-content">
-      <!-- Para fotos -->
       <img src="" alt="" id="modal-img" style="display: none;" referrerpolicy="no-referrer" />
-      
-      <!-- Para videos -->
       <video id="modal-video" controls style="display: none;"></video>
 
       <div class="info-card">
