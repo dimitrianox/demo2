@@ -11,15 +11,15 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  color: #e2e8f0;
-  background-color: #0b0d10;
+  color: #f1f5f9;
+  background-color: #080a0c; /* Fondo oscuro idéntico a la imagen de muestra */
   padding: 1.5rem 0 3rem 0;
   font-family: 'Roboto', sans-serif;
   position: relative;
   overflow-x: hidden;
 }
 
-/* FONDO TIPO MAPA Y RUTAS EN DORA/OSCURO */
+/* CAPA DE MAPA VECTORIAL */
 .map-bg-layer {
   position: fixed;
   top: 0;
@@ -28,9 +28,30 @@ body {
   height: 100vh;
   pointer-events: none;
   z-index: 0;
-  opacity: 0.35;
-  background: radial-gradient(circle at 50% 20%, rgba(212, 175, 55, 0.08), transparent 70%),
-              url('https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat;
+}
+
+/* Luces de ambiente en puntos clave */
+.map-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+}
+
+.glow-1 {
+  width: 300px;
+  height: 300px;
+  background: rgba(212, 175, 55, 0.07);
+  top: 10%;
+  right: 15%;
+}
+
+.glow-2 {
+  width: 250px;
+  height: 250px;
+  background: rgba(212, 175, 55, 0.05);
+  bottom: 20%;
+  left: 10%;
 }
 
 .map-svg {
@@ -38,35 +59,43 @@ body {
   height: 100%;
 }
 
+/* Líneas de costa y mapas vectoriales doradas finas */
+.map-contours path {
+  fill: none;
+  stroke: rgba(180, 140, 60, 0.22);
+  stroke-width: 1;
+}
+
 .route-path {
   fill: none;
-  stroke: rgba(212, 175, 55, 0.5);
-  stroke-width: 1.5;
-  stroke-dasharray: 6;
-  animation: dashMove 30s linear infinite;
+  stroke: rgba(230, 190, 90, 0.6);
+  stroke-width: 1.2;
+  stroke-dasharray: 4 6;
+  animation: dashMove 25s linear infinite;
 }
 
 .node-dot {
-  fill: #f5d77f;
+  fill: #ffe58f;
+  filter: drop-shadow(0 0 6px #d4af37);
 }
 
 .node-pulse {
   fill: none;
-  stroke: #d4af37;
+  stroke: rgba(212, 175, 55, 0.6);
   stroke-width: 1;
-  animation: pulse 2.5s infinite ease-out;
+  animation: pulse 2.8s infinite ease-out;
 }
 
 @keyframes pulse {
-  0% { transform: scale(0.3); opacity: 1; }
-  100% { transform: scale(2.2); opacity: 0; }
+  0% { transform: scale(0.2); opacity: 1; }
+  100% { transform: scale(2.5); opacity: 0; }
 }
 
 @keyframes dashMove {
   to { stroke-dashoffset: -100; }
 }
 
-/* ENCABEZADO */
+/* ENCABEZADO ESTILO ATLAS */
 .atlas-header {
   z-index: 1;
   margin-bottom: 1.5rem;
@@ -75,13 +104,13 @@ body {
 
 .atlas-header h1 {
   font-family: 'Cinzel', serif;
-  font-size: 1.4rem;
-  letter-spacing: 4px;
-  color: #d4af37;
+  font-size: 1.3rem;
+  letter-spacing: 5px;
+  color: rgba(212, 175, 55, 0.85);
   text-transform: uppercase;
 }
 
-/* GRID PRINCIPAL */
+/* GRID PRINCIPAL DE FOTOS */
 main {
   max-width: 800px;
   width: 90vw;
@@ -96,9 +125,10 @@ main {
 
 main a {
   overflow: hidden;
-  border-radius: 8px;
-  border: 1px solid rgba(212, 175, 55, 0.2);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.7);
+  background-color: #111418;
 }
 
 main a.span-col-2 { grid-column: span 2; }
@@ -122,19 +152,19 @@ main video {
   display: block;
   width: 100%;
   height: 100%;
-  filter: brightness(0.75) contrast(1.05);
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  filter: brightness(0.85) contrast(1.05);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), filter 0.4s ease;
 }
 
 main a:focus img,
 main a:hover img,
 main a:focus video,
 main a:hover video {
-  transform: scale(1.06);
-  filter: brightness(1) contrast(1);
+  transform: scale(1.05);
+  filter: brightness(1.05) contrast(1.05);
 }
 
-/* MODAL Y ANIMACIÓN DE APERTURA */
+/* MODAL OVERLAY CON FONDO OSCURO Y DESENFOQUE */
 div.modal {
   position: fixed;
   top: 0;
@@ -144,9 +174,9 @@ div.modal {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: rgba(5, 7, 10, 0.88);
-  backdrop-filter: blur(8px);
-  transition: opacity 0.3s ease, visibility 0.3s ease;
+  background: rgba(4, 5, 7, 0.92);
+  backdrop-filter: blur(10px);
+  transition: opacity 0.35s ease, visibility 0.35s ease;
   opacity: 0;
   visibility: hidden;
   z-index: 1000;
@@ -176,25 +206,25 @@ div.modal video {
   width: 85vw;
   max-width: 900px;
   object-fit: contain;
-  border-radius: 6px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+  border-radius: 8px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.9);
 }
 
 div.modal img {
   cursor: pointer;
 }
 
-/* TARJETA DE INFORMACIÓN CON ACABADO DORADO */
+/* TARJETA INFORMATIVA */
 .info-card {
   position: absolute;
   bottom: 25px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(11, 13, 16, 0.9);
+  background: rgba(10, 12, 16, 0.92);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  border: 1px solid rgba(212, 175, 55, 0.25);
   padding: 14px 22px;
-  border-radius: 8px;
+  border-radius: 10px;
   color: #fff;
   text-align: center;
   pointer-events: none;
@@ -202,19 +232,19 @@ div.modal img {
   width: 82%;
   max-width: 420px;
   z-index: 1010;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.8);
 }
 
 .info-card h3 {
   font-family: 'Cinzel', serif;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   margin-bottom: 4px;
   color: #f5d77f;
 }
 
 #info-meta {
   font-size: 0.8rem;
-  color: #a0aec0;
+  color: #94a3b8;
   margin-bottom: 6px;
   display: flex;
   justify-content: center;
