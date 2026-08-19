@@ -45,19 +45,20 @@ const AtlasEngine = (function () {
     return null;
   }
 
-  function ejecutarTransicion(contenedor, datos, alFinalizar) {
+  function ejecutarSecuenciaAtlas(contenedor, datos, alEmergerFoto) {
     const mapaElegido = datos.mapa || 'europe';
     const claveUbicacion = resolverClaveUbicacion(datos.ubicacion);
 
     cargarMapa(mapaElegido).then(svgContenido => {
       if (!svgContenido || !claveUbicacion) {
-        // Fallback rápido si no hay mapa o ubicación
-        if (alFinalizar) alFinalizar();
+        if (alEmergerFoto) alEmergerFoto();
         return;
       }
 
       contenedor.innerHTML = svgContenido;
       const svgElem = contenedor.querySelector('svg');
+      if (svgElem) svgElem.classList.add('atlas-svg');
+
       const layerRuta = svgElem.querySelector('#route-layer');
       const layerNodos = svgElem.querySelector('#nodes-layer');
       const coordsMapa = coordenadas[mapaElegido];
@@ -74,60 +75,62 @@ const AtlasEngine = (function () {
         }
       });
 
-      // 1. Mostrar pantalla de mapa (150ms)
-      contenedor.classList.add('activo');
-
       const destino = puntos[puntos.length - 1];
 
-      if (puntos.length > 1 && layerRuta) {
-        const pathElem = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        pathElem.setAttribute('d', dPath);
-        pathElem.setAttribute('class', 'atlas-flight-path');
-        layerRuta.appendChild(pathElem);
+      // T0 ms: 3. MAPA APARECE (Fade In)
+      contenedor.classList.add('activo');
 
-        const largoTotal = pathElem.getTotalLength();
-        pathElem.style.strokeDasharray = largoTotal;
-        pathElem.style.strokeDashoffset = largoTotal;
+      // T200 ms: 4. RUTA SE DIBUJA
+      setTimeout(() => {
+        if (puntos.length > 1 && layerRuta) {
+          const pathElem = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          pathElem.setAttribute('d', dPath);
+          pathElem.setAttribute('class', 'atlas-flight-path');
+          layerRuta.appendChild(pathElem);
 
-        // 2. Dibujar ruta y hacer zoom a la ciudad destino (150ms -> 350ms)
-        setTimeout(() => {
+          const largoTotal = pathElem.getTotalLength();
+          pathElem.style.strokeDasharray = largoTotal;
+          pathElem.style.strokeDashoffset = largoTotal;
+
           pathElem.style.transition = 'stroke-dashoffset 200ms ease-in-out';
           pathElem.style.strokeDashoffset = '0';
+        }
 
-          if (destino) {
-            svgElem.style.transformOrigin = `${(destino.x / 800) * 100}% ${(destino.y / 600) * 100}%`;
-            svgElem.style.transform = 'scale(1.8)';
-          }
-        }, 120);
-      }
+        if (layerNodos) {
+          puntos.forEach((pt, idx) => {
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circle.setAttribute('cx', pt.x);
+            circle.setAttribute('cy', pt.y);
+            circle.setAttribute('r', idx === puntos.length - 1 ? 5 : 3);
+            circle.setAttribute('class', idx === puntos.length - 1 ? 'atlas-node-target' : 'atlas-node');
+            layerNodos.appendChild(circle);
+          });
+        }
+      }, 200);
 
-      // Dibujar nodos
-      if (layerNodos) {
-        puntos.forEach((pt, idx) => {
-          const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-          circle.setAttribute('cx', pt.x);
-          circle.setAttribute('cy', pt.y);
-          circle.setAttribute('r', idx === puntos.length - 1 ? 4 : 2.5);
-          circle.setAttribute('class', idx === puntos.length - 1 ? 'atlas-node-target' : 'atlas-node');
-          layerNodos.appendChild(circle);
-        });
-      }
+      // T400 ms: 5. ZOOM A LA CIUDAD
+      setTimeout(() => {
+        if (destino && svgElem) {
+          svgElem.style.transformOrigin = `${(destino.x / 800) * 100}% ${(destino.y / 600) * 100}%`;
+          svgElem.style.transform = 'scale(2.2)';
+        }
+      }, 400);
 
-      // 3. Transformación y ocultamiento total del mapa (450ms -> 600ms)
+      // T600 ms: 6. FOTO EMERGE Y EXPANDE
+      setTimeout(() => {
+        if (alEmergerFoto) alEmergerFoto();
+      }, 600);
+
+      // T700 ms: 7. FOTO COMPLETA (Mapa Desaparece por completo)
       setTimeout(() => {
         contenedor.classList.remove('activo');
-        if (alFinalizar) alFinalizar();
-        
-        // Limpiar el DOM del mapa al completar la transición
-        setTimeout(() => {
-          contenedor.innerHTML = '';
-          svgElem.style.transform = 'scale(1)';
-        }, 200);
-      }, 420);
+        setTimeout(() => { contenedor.innerHTML = ''; }, 200);
+      }, 750);
+
     }).catch(() => {
-      if (alFinalizar) alFinalizar();
+      if (alEmergerFoto) alEmergerFoto();
     });
   }
 
-  return { ejecutarTransicion };
+  return { ejecutarSecuenciaAtlas };
 })();

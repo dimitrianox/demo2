@@ -100,27 +100,26 @@ function inicializarEventos() {
       const esVid = this.dataset.esVideo === 'true';
       const datosModal = this.dataset;
 
-      // Resetear clases de visibilidad previa
-      modalImg.classList.remove('foto-visible');
-      modalVideo.classList.remove('foto-visible');
+      // Resetear clases de animación previa
+      modalImg.classList.remove('foto-emergida');
+      modalVideo.classList.remove('foto-emergida');
       overlay.classList.add('overlay');
 
-      // Función que revela la imagen al concluir el mapa
-      const mostrarFotografia = () => {
+      const revelarFotoFinal = () => {
         if (esVid) {
           modalImg.style.display = 'none';
           modalImg.src = '';
           modalVideo.src = url;
           modalVideo.style.display = 'block';
           modalVideo.play().catch(() => {});
-          modalVideo.classList.add('foto-visible');
+          setTimeout(() => modalVideo.classList.add('foto-emergida'), 20);
         } else {
           modalVideo.style.display = 'none';
           modalVideo.pause();
           modalVideo.src = '';
           modalImg.src = url;
           modalImg.style.display = 'block';
-          modalImg.classList.add('foto-visible');
+          setTimeout(() => modalImg.classList.add('foto-emergida'), 20);
         }
 
         if (document.getElementById('info-titulo')) {
@@ -138,14 +137,14 @@ function inicializarEventos() {
         }
       };
 
-      // Ejecutar animación de la ruta en mapa antes de revelar la foto
+      // Disparar secuencia de animación completa
       if (typeof AtlasEngine !== 'undefined' && datosModal.ubicacion) {
-        AtlasEngine.ejecutarTransicion(atlasCanvas, {
+        AtlasEngine.ejecutarSecuenciaAtlas(atlasCanvas, {
           ubicacion: datosModal.ubicacion,
           mapa: datosModal.mapa
-        }, mostrarFotografia);
+        }, revelarFotoFinal);
       } else {
-        mostrarFotografia();
+        revelarFotoFinal();
       }
 
       links.forEach(l => l.setAttribute('tabindex', -1));
@@ -172,8 +171,8 @@ function inicializarEventos() {
 
 function cerrarModal(links) {
   overlay.classList.remove('overlay');
-  modalImg.classList.remove('foto-visible');
-  modalVideo.classList.remove('foto-visible');
+  modalImg.classList.remove('foto-emergida');
+  modalVideo.classList.remove('foto-emergida');
   modalVideo.pause();
   modalVideo.src = '';
   if (infoCard) infoCard.classList.remove('mostrar');
