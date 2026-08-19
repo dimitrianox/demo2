@@ -5,8 +5,7 @@ const AtlasEngine = (function () {
     'world': {
       'cdmx': { x: 210, y: 220 },
       'madrid': { x: 480, y: 160 },
-      'londres': { x: 475, y: 130 },
-      'tokio': { x: 820, y: 180 }
+      'londres': { x: 475, y: 130 }
     },
     'europe': {
       'madrid': { x: 210, y: 380 },
@@ -27,12 +26,11 @@ const AtlasEngine = (function () {
     if (cacheMapas[nombreMapa]) return cacheMapas[nombreMapa];
     try {
       const respuesta = await fetch(`maps/${nombreMapa}.svg`);
-      if (!respuesta.ok) throw new Error(`HTTP Error: ${respuesta.status}`);
+      if (!respuesta.ok) return null;
       const svgTexto = await respuesta.text();
       cacheMapas[nombreMapa] = svgTexto;
       return svgTexto;
     } catch (e) {
-      console.warn("Atlas Engine: No se pudo cargar el mapa SVG:", nombreMapa, e);
       return null;
     }
   }
@@ -44,91 +42,92 @@ const AtlasEngine = (function () {
     if (minuscula.includes('madrid')) return 'madrid';
     if (minuscula.includes('parís') || minuscula.includes('paris')) return 'paris';
     if (minuscula.includes('brujas')) return 'brujas';
-    if (minuscula.includes('méxico') || minuscula.includes('cdmx')) return 'cdmx';
     return null;
   }
 
-  async function renderizarRuta(contenedor, datos) {
-    if (!contenedor) return;
-
+  function ejecutarTransicion(contenedor, datos, alFinalizar) {
     const mapaElegido = datos.mapa || 'europe';
     const claveUbicacion = resolverClaveUbicacion(datos.ubicacion);
-    
-    const svgContenido = await cargarMapa(mapaElegido);
-    if (!svgContenido) {
-      // Fallback silencioso: no interrumpe la apertura de la foto si no hay mapa
-      contenedor.classList.remove('visible');
-      return;
-    }
 
-    contenedor.innerHTML = svgContenido;
-    const svgElem = contenedor.querySelector('svg');
-    if (!svgElem) return;
-
-    const layerRuta = svgElem.querySelector('#route-layer');
-    const layerNodos = svgElem.querySelector('#nodes-layer');
-
-    if (!claveUbicacion || !coordenadas[mapaElegido]) {
-      contenedor.classList.add('visible');
-      return;
-    }
-
-    const secuencia = itinerarios[claveUbicacion] || [claveUbicacion];
-    const coordsMapa = coordenadas[mapaElegido];
-
-    let dPath = '';
-    let puntos = [];
-
-    secuencia.forEach((p, idx) => {
-      if (coordsMapa[p]) {
-        const pt = coordsMapa[p];
-        puntos.push(pt);
-        dPath += (idx === 0) ? `M ${pt.x} ${pt.y}` : ` L ${pt.x} ${pt.y}`;
+    cargarMapa(mapaElegido).then(svgContenido => {
+      if (!svgContenido || !claveUbicacion) {
+        // Fallback rápido si no hay mapa o ubicación
+        if (alFinalizar) alFinalizar();
+        return;
       }
-    });
 
-    if (puntos.length > 1 && layerRuta) {
-      const pathElem = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      pathElem.setAttribute('d', dPath);
-      pathElem.setAttribute('class', 'atlas-flight-path');
-      
-      layerRuta.appendChild(pathElem);
+      contenedor.innerHTML = svgContenido;
+      const svgElem = contenedor.querySelector('svg');
+      const layerRuta = svgElem.querySelector('#route-layer');
+      const layerNodos = svgElem.querySelector('#nodes-layer');
+      const coordsMapa = coordenadas[mapaElegido];
 
-      try {
+      const secuencia = itinerarios[claveUbicacion] || [claveUbicacion];
+      let dPath = '';
+      let puntos = [];
+
+      secuencia.forEach((p, idx) => {
+        if (coordsMapa[p]) {
+          const pt = coordsMapa[p];
+          puntos.push(pt);
+          dPath += (idx === 0) ? `M ${pt.x} ${pt.y}` : ` L ${pt.x} ${pt.y}`;
+        }
+      });
+
+      // 1. Mostrar pantalla de mapa (150ms)
+      contenedor.classList.add('activo');
+
+      const destino = puntos[puntos.length - 1];
+
+      if (puntos.length > 1 && layerRuta) {
+        const pathElem = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        pathElem.setAttribute('d', dPath);
+        pathElem.setAttribute('class', 'atlas-flight-path');
+        layerRuta.appendChild(pathElem);
+
         const largoTotal = pathElem.getTotalLength();
         pathElem.style.strokeDasharray = largoTotal;
         pathElem.style.strokeDashoffset = largoTotal;
 
-        contenedor.classList.add('visible');
-
+        // 2. Dibujar ruta y hacer zoom a la ciudad destino (150ms -> 350ms)
         setTimeout(() => {
-          pathElem.style.transition = 'stroke-dashoffset 220ms ease-in-out';
+          pathElem.style.transition = 'stroke-dashoffset 200ms ease-in-out';
           pathElem.style.strokeDashoffset = '0';
-        }, 150);
-      } catch (e) {
-        contenedor.classList.add('visible');
+
+          if (destino) {
+            svgElem.style.transformOrigin = `${(destino.x / 800) * 100}% ${(destino.y / 600) * 100}%`;
+            svgElem.style.transform = 'scale(1.8)';
+          }
+        }, 120);
       }
-    } else {
-      contenedor.classList.add('visible');
-    }
 
-    if (layerNodos) {
-      puntos.forEach((pt, idx) => {
-        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        circle.setAttribute('cx', pt.x);
-        circle.setAttribute('cy', pt.y);
-        circle.setAttribute('r', idx === puntos.length - 1 ? 4 : 2.5);
-        circle.setAttribute('class', idx === puntos.length - 1 ? 'atlas-node-target' : 'atlas-node');
-        layerNodos.appendChild(circle);
-      });
-    }
+      // Dibujar nodos
+      if (layerNodos) {
+        puntos.forEach((pt, idx) => {
+          const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          circle.setAttribute('cx', pt.x);
+          circle.setAttribute('cy', pt.y);
+          circle.setAttribute('r', idx === puntos.length - 1 ? 4 : 2.5);
+          circle.setAttribute('class', idx === puntos.length - 1 ? 'atlas-node-target' : 'atlas-node');
+          layerNodos.appendChild(circle);
+        });
+      }
+
+      // 3. Transformación y ocultamiento total del mapa (450ms -> 600ms)
+      setTimeout(() => {
+        contenedor.classList.remove('activo');
+        if (alFinalizar) alFinalizar();
+        
+        // Limpiar el DOM del mapa al completar la transición
+        setTimeout(() => {
+          contenedor.innerHTML = '';
+          svgElem.style.transform = 'scale(1)';
+        }, 200);
+      }, 420);
+    }).catch(() => {
+      if (alFinalizar) alFinalizar();
+    });
   }
 
-  function limpiar(contenedor) {
-    if (!contenedor) return;
-    contenedor.classList.remove('visible');
-    setTimeout(() => { contenedor.innerHTML = ''; }, 200);
-  }
-
-  return { renderizarRuta, limpiar };
+  return { ejecutarTransicion };
 })();

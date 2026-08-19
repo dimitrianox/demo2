@@ -98,46 +98,56 @@ function inicializarEventos() {
       
       const url = this.dataset.url;
       const esVid = this.dataset.esVideo === 'true';
+      const datosModal = this.dataset;
 
-      // Renderizar Atlas de forma segura
-      if (typeof AtlasEngine !== 'undefined') {
-        AtlasEngine.renderizarRuta(atlasCanvas, {
-          ubicacion: this.dataset.ubicacion,
-          mapa: this.dataset.mapa
-        }).catch(err => console.warn("Error renderizando Atlas:", err));
-      }
-
-      if (esVid) {
-        modalImg.style.display = 'none';
-        modalImg.src = '';
-        
-        modalVideo.src = url;
-        modalVideo.style.display = 'block';
-        modalVideo.play();
-      } else {
-        modalVideo.style.display = 'none';
-        modalVideo.pause();
-        modalVideo.src = '';
-        
-        modalImg.src = url;
-        modalImg.style.display = 'block';
-      }
-      
-      if (document.getElementById('info-titulo')) {
-        document.getElementById('info-titulo').textContent = this.dataset.titulo;
-        document.getElementById('info-ubicacion').textContent = this.dataset.ubicacion ? `📍 ${this.dataset.ubicacion}` : '';
-        document.getElementById('info-fecha').textContent = this.dataset.fecha ? `📅 ${this.dataset.fecha}` : '';
-        document.getElementById('info-descripcion').textContent = this.dataset.descripcion;
-
-        infoCard.classList.remove('mostrar');
-        void infoCard.offsetWidth; 
-        
-        if (this.dataset.titulo || this.dataset.ubicacion || this.dataset.fecha || this.dataset.descripcion) {
-          infoCard.classList.add('mostrar');
-        }
-      }
-
+      // Resetear clases de visibilidad previa
+      modalImg.classList.remove('foto-visible');
+      modalVideo.classList.remove('foto-visible');
       overlay.classList.add('overlay');
+
+      // Función que revela la imagen al concluir el mapa
+      const mostrarFotografia = () => {
+        if (esVid) {
+          modalImg.style.display = 'none';
+          modalImg.src = '';
+          modalVideo.src = url;
+          modalVideo.style.display = 'block';
+          modalVideo.play().catch(() => {});
+          modalVideo.classList.add('foto-visible');
+        } else {
+          modalVideo.style.display = 'none';
+          modalVideo.pause();
+          modalVideo.src = '';
+          modalImg.src = url;
+          modalImg.style.display = 'block';
+          modalImg.classList.add('foto-visible');
+        }
+
+        if (document.getElementById('info-titulo')) {
+          document.getElementById('info-titulo').textContent = datosModal.titulo;
+          document.getElementById('info-ubicacion').textContent = datosModal.ubicacion ? `📍 ${datosModal.ubicacion}` : '';
+          document.getElementById('info-fecha').textContent = datosModal.fecha ? `📅 ${datosModal.fecha}` : '';
+          document.getElementById('info-descripcion').textContent = datosModal.descripcion;
+
+          infoCard.classList.remove('mostrar');
+          void infoCard.offsetWidth; 
+          
+          if (datosModal.titulo || datosModal.ubicacion || datosModal.fecha || datosModal.descripcion) {
+            infoCard.classList.add('mostrar');
+          }
+        }
+      };
+
+      // Ejecutar animación de la ruta en mapa antes de revelar la foto
+      if (typeof AtlasEngine !== 'undefined' && datosModal.ubicacion) {
+        AtlasEngine.ejecutarTransicion(atlasCanvas, {
+          ubicacion: datosModal.ubicacion,
+          mapa: datosModal.mapa
+        }, mostrarFotografia);
+      } else {
+        mostrarFotografia();
+      }
+
       links.forEach(l => l.setAttribute('tabindex', -1));
     });
   });
@@ -148,13 +158,13 @@ function inicializarEventos() {
   overlay.addEventListener('click', function(e) {
     const esModalVideo = modalVideo.style.display === 'block';
 
-    if (e.target === overlay || e.target === atlasCanvas) {
+    if (e.target === overlay) {
       if (esModalVideo) {
         manejarDobleTap();
       } else {
         cerrarModal(links);
       }
-    } else if (!esModalVideo) {
+    } else if (!esModalVideo && e.target !== modalImg) {
       cerrarModal(links);
     }
   });
@@ -162,9 +172,8 @@ function inicializarEventos() {
 
 function cerrarModal(links) {
   overlay.classList.remove('overlay');
-  if (typeof AtlasEngine !== 'undefined') {
-    AtlasEngine.limpiar(atlasCanvas);
-  }
+  modalImg.classList.remove('foto-visible');
+  modalVideo.classList.remove('foto-visible');
   modalVideo.pause();
   modalVideo.src = '';
   if (infoCard) infoCard.classList.remove('mostrar');
