@@ -1,23 +1,21 @@
 const AtlasEngine = (function () {
   const cacheMapas = {};
   
-  // Coordenadas locales simplificadas dentro de los mapas SVG
   const coordenadas = {
     'world': {
-      'cdmx': { x: 210, y: 220, label: 'Ciudad de México' },
-      'madrid': { x: 480, y: 160, label: 'Madrid' },
-      'londres': { x: 475, y: 130, label: 'Londres' },
-      'tokio': { x: 820, y: 180, label: 'Tokio' }
+      'cdmx': { x: 210, y: 220 },
+      'madrid': { x: 480, y: 160 },
+      'londres': { x: 475, y: 130 },
+      'tokio': { x: 820, y: 180 }
     },
     'europe': {
-      'madrid': { x: 210, y: 380, label: 'Madrid' },
-      'paris': { x: 270, y: 290, label: 'París' },
-      'londres': { x: 240, y: 245, label: 'Londres' },
-      'brujas': { x: 275, y: 250, label: 'Brujas' }
+      'madrid': { x: 210, y: 380 },
+      'paris': { x: 270, y: 290 },
+      'londres': { x: 240, y: 245 },
+      'brujas': { x: 275, y: 250 }
     }
   };
 
-  // Definición de itinerarios del viaje para hacer la progresión real
   const itinerarios = {
     'londres': ['madrid', 'paris', 'londres'],
     'brujas': ['madrid', 'paris', 'brujas'],
@@ -29,12 +27,13 @@ const AtlasEngine = (function () {
     if (cacheMapas[nombreMapa]) return cacheMapas[nombreMapa];
     try {
       const respuesta = await fetch(`maps/${nombreMapa}.svg`);
+      if (!respuesta.ok) throw new Error(`HTTP Error: ${respuesta.status}`);
       const svgTexto = await respuesta.text();
       cacheMapas[nombreMapa] = svgTexto;
       return svgTexto;
     } catch (e) {
-      console.warn("No se pudo cargar el mapa offline:", nombreMapa);
-      return '';
+      console.warn("Atlas Engine: No se pudo cargar el mapa SVG:", nombreMapa, e);
+      return null;
     }
   }
 
@@ -50,14 +49,22 @@ const AtlasEngine = (function () {
   }
 
   async function renderizarRuta(contenedor, datos) {
+    if (!contenedor) return;
+
     const mapaElegido = datos.mapa || 'europe';
     const claveUbicacion = resolverClaveUbicacion(datos.ubicacion);
     
     const svgContenido = await cargarMapa(mapaElegido);
-    if (!svgContenido) return;
+    if (!svgContenido) {
+      // Fallback silencioso: no interrumpe la apertura de la foto si no hay mapa
+      contenedor.classList.remove('visible');
+      return;
+    }
 
     contenedor.innerHTML = svgContenido;
     const svgElem = contenedor.querySelector('svg');
+    if (!svgElem) return;
+
     const layerRuta = svgElem.querySelector('#route-layer');
     const layerNodos = svgElem.querySelector('#nodes-layer');
 
@@ -80,41 +87,45 @@ const AtlasEngine = (function () {
       }
     });
 
-    if (puntos.length > 1) {
+    if (puntos.length > 1 && layerRuta) {
       const pathElem = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       pathElem.setAttribute('d', dPath);
       pathElem.setAttribute('class', 'atlas-flight-path');
       
       layerRuta.appendChild(pathElem);
 
-      const largoTotal = pathElem.getTotalLength();
-      pathElem.style.strokeDasharray = largoTotal;
-      pathElem.style.strokeDashoffset = largoTotal;
+      try {
+        const largoTotal = pathElem.getTotalLength();
+        pathElem.style.strokeDasharray = largoTotal;
+        pathElem.style.strokeDashoffset = largoTotal;
 
-      // Fase 1: Mostrar mapa (200ms)
-      contenedor.classList.add('visible');
+        contenedor.classList.add('visible');
 
-      // Fase 2: Trazado incremental de la ruta (220ms)
-      setTimeout(() => {
-        pathElem.style.transition = 'stroke-dashoffset 220ms ease-in-out';
-        pathElem.style.strokeDashoffset = '0';
-      }, 150);
+        setTimeout(() => {
+          pathElem.style.transition = 'stroke-dashoffset 220ms ease-in-out';
+          pathElem.style.strokeDashoffset = '0';
+        }, 150);
+      } catch (e) {
+        contenedor.classList.add('visible');
+      }
     } else {
       contenedor.classList.add('visible');
     }
 
-    // Dibujar nodos de parada
-    puntos.forEach((pt, idx) => {
-      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-      circle.setAttribute('cx', pt.x);
-      circle.setAttribute('cy', pt.y);
-      circle.setAttribute('r', idx === puntos.length - 1 ? 4 : 2.5);
-      circle.setAttribute('class', idx === puntos.length - 1 ? 'atlas-node-target' : 'atlas-node');
-      layerNodos.appendChild(circle);
-    });
+    if (layerNodos) {
+      puntos.forEach((pt, idx) => {
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', pt.x);
+        circle.setAttribute('cy', pt.y);
+        circle.setAttribute('r', idx === puntos.length - 1 ? 4 : 2.5);
+        circle.setAttribute('class', idx === puntos.length - 1 ? 'atlas-node-target' : 'atlas-node');
+        layerNodos.appendChild(circle);
+      });
+    }
   }
 
   function limpiar(contenedor) {
+    if (!contenedor) return;
     contenedor.classList.remove('visible');
     setTimeout(() => { contenedor.innerHTML = ''; }, 200);
   }

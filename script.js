@@ -99,11 +99,13 @@ function inicializarEventos() {
       const url = this.dataset.url;
       const esVid = this.dataset.esVideo === 'true';
 
-      // Disparar motor Atlas en el fondo
-      AtlasEngine.renderizarRuta(atlasCanvas, {
-        ubicacion: this.dataset.ubicacion,
-        mapa: this.dataset.mapa
-      });
+      // Renderizar Atlas de forma segura
+      if (typeof AtlasEngine !== 'undefined') {
+        AtlasEngine.renderizarRuta(atlasCanvas, {
+          ubicacion: this.dataset.ubicacion,
+          mapa: this.dataset.mapa
+        }).catch(err => console.warn("Error renderizando Atlas:", err));
+      }
 
       if (esVid) {
         modalImg.style.display = 'none';
@@ -160,7 +162,9 @@ function inicializarEventos() {
 
 function cerrarModal(links) {
   overlay.classList.remove('overlay');
-  AtlasEngine.limpiar(atlasCanvas);
+  if (typeof AtlasEngine !== 'undefined') {
+    AtlasEngine.limpiar(atlasCanvas);
+  }
   modalVideo.pause();
   modalVideo.src = '';
   if (infoCard) infoCard.classList.remove('mostrar');
